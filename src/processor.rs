@@ -2,6 +2,7 @@ use solana_program::{
     account_info::{next_account_info, AccountInfo},
     entrypoint::ProgramResult,
     msg,
+    program::invoke,
     program_error::ProgramError,
     program_pack::{IsInitialized, Pack},
     pubkey::Pubkey,
@@ -70,6 +71,27 @@ impl Processor {
         Escrow::pack(escrow_info, &mut escrow_account.data.as_ref().borrow_mut())?;
 
         let (pda, _bump_seed) = Pubkey::find_program_address(&[b"escrow"], program_id);
+
+        let token_program = next_account_info(account_info_iter)?;
+        let owner_change_ix = spl_token::instruction::set_authority(
+            token_program.key,
+            temp_token_account.key,
+            Some(&pda),
+            spl_token::instruction::AuthorityType::AccountOwner,
+            initializer.key,
+            &[&initializer.key],
+        )?;
+
+        msg!("Calling the token program to transfer token account ownership...");
+
+        invoke(
+            &owner_change_ix,
+            &[
+                temp_token_account.clone(),
+                initializer.clone(),
+                token_program.clone(),
+            ],
+        )?;
 
         Ok(())
     }
