@@ -8,11 +8,11 @@ use crate::{error::EscrowError, instruction::EscrowInstruction};
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 
 pub struct Escrow {
-    pub is_initialized: bool,
-    pub initializer_pubkey: Pubkey,
-    pub temp_token_account_pubkey: Pubkey,
-    pub initializer_token_to_receive_account_pubkey: Pubkey,
-    pub expected_amount: u64,
+    pub is_initialized: bool,                                //u8
+    pub initializer_pubkey: Pubkey,                          //32
+    pub temp_token_account_pubkey: Pubkey,                   //32
+    pub initializer_token_to_receive_account_pubkey: Pubkey, //32
+    pub expected_amount: u64,                                //8 *
 }
 
 impl Sealed for Escrow {}
@@ -24,6 +24,7 @@ impl IsInitialized for Escrow {
 }
 
 impl Pack for Escrow {
+    // 1 (bool) + 3 * 32 (Pubkey) + 1 * 8 (u64) = 105
     const LEN: usize = 105;
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
